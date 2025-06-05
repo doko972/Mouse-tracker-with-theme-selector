@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghost Mouse Tracker</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            cursor: none;
+            position: relative;
+            transition: background 0.5s ease;
+        }
+
+        /* Thèmes de fond */
+        body.theme-ghost {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+        }
+
+        body.theme-halloween {
+            background: linear-gradient(135deg, #2d1b69, #11009e, #4a00e0);
+        }
+
+        body.theme-christmas {
+            background: linear-gradient(135deg, #0f4c75, #3282b8, #bbe1fa);
+        }
+
+        /* Sélecteur de thème */
+        .theme-selector {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 2000;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            gap: 10px;
+        }
+
+        .theme-button {
+            width: 50px;
+            height: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .theme-button:hover {
+            transform: scale(1.1);
+            border-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .theme-button.active {
+            border-color: #fff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .theme-button.btn-ghost {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+        }
+
+        .theme-button.btn-ghost::after {
+            content: '👻';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+        }
+
+        .theme-button.halloween::after {
+            content: '🎃';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+        }
+
+        .theme-button.christmas::after {
+            content: '🎄';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+        }
+
+        .theme-button.halloween {
+            background: linear-gradient(135deg, #2d1b69, #4a00e0);
+        }
+
+        .theme-button.christmas {
+            background: linear-gradient(135deg, #0f4c75, #bbe1fa);
+        }
+
+        /* Effet de neige */
+        .snowflake {
+            position: absolute;
+            top: -10px;
+            color: white;
+            font-size: 1em;
+            animation: fall linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+
+        /* Animation de flottement */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            25% { transform: translateY(-3px) rotate(-1deg); }
+            50% { transform: translateY(-6px) rotate(0deg); }
+            75% { transform: translateY(-3px) rotate(1deg); }
+        }
+
+        /* Particules flottantes */
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: floatParticle 3s infinite ease-in-out;
+        }
+
+        @keyframes floatParticle {
+            0%, 100% { 
+                transform: translateY(0px) translateX(0px) scale(1);
+                opacity: 0.6;
+            }
+            50% { 
+                transform: translateY(-20px) translateX(10px) scale(1.2);
+                opacity: 1;
+            }
+        }
+
+        .ghost {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            pointer-events: none;
+            transition: transform 0.1s ease-out;
+            animation: float 4s infinite ease-in-out;
+        }
+
+        #ghost-main {
+            z-index: 1000;
+            animation-delay: 0s;
+        }
+
+        .ghost-trail {
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sélecteur de thème -->
+    <div class="theme-selector">
+        <div class="theme-button btn-ghost active" data-theme="ghost" title="Fantôme"></div>
+        <div class="theme-button halloween" data-theme="halloween" title="Halloween"></div>
+        <div class="theme-button christmas" data-theme="christmas" title="Noël"></div>
+    </div>
+
+    <!-- Fantôme principal -->
+    <svg id="ghost-main" class="ghost" viewBox="0 0 100 100">
+        <defs>
+            <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge> 
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+        </defs>
+        
+        <!-- Corps du fantôme -->
+        <path id="main-shape" d="M50 20 
+                 C35 20, 25 30, 25 45
+                 L25 70
+                 C25 75, 30 80, 35 75
+                 L40 70
+                 C45 75, 50 75, 55 70
+                 L60 75
+                 C65 80, 70 75, 75 70
+                 L75 45
+                 C75 30, 65 20, 50 20 Z" 
+              fill="rgba(255, 255, 255, 0.9)" 
+              filter="url(#glow)"/>
+        
+        <!-- Yeux -->
+        <circle id="eye1" cx="40" cy="40" r="4" fill="#333"/>
+        <circle id="eye2" cx="60" cy="40" r="4" fill="#333"/>
+        
+        <!-- Bouche -->
+        <ellipse id="mouth" cx="50" cy="55" rx="8" ry="6" fill="#333"/>
+    </svg>
+
+    <!-- Traînée de fantômes -->
+
+    <script>
+        // Variables pour la position de la souris
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+        
+        const ghostMain = document.getElementById('ghost-main');
+        const trailGhosts = [];
+        const trailPositions = [];
+        const trailLength = 8;
+        const particles = [];
+        let currentTheme = 'ghost';
+        let snowflakes = [];
+
+        // Définition des thèmes
+        const themes = {
+            ghost: {
+                shape: 'M50 20 C35 20, 25 30, 25 45 L25 70 C25 75, 30 80, 35 75 L40 70 C45 75, 50 75, 55 70 L60 75 C65 80, 70 75, 75 70 L75 45 C75 30, 65 20, 50 20 Z',
+                fill: 'rgba(255, 255, 255, 0.9)',
+                eye1: { cx: 40, cy: 40, r: 4 },
+                eye2: { cx: 60, cy: 40, r: 4 },
+                mouth: { cx: 50, cy: 55, rx: 8, ry: 6 }
+            },
+            halloween: {
+                shape: 'M50 15 C35 15, 20 25, 20 40 L20 50 C20 65, 25 75, 35 75 L65 75 C75 75, 80 65, 80 50 L80 40 C80 25, 65 15, 50 15 Z',
+                fill: 'rgba(255, 140, 0, 0.9)',
+                eye1: { cx: 38, cy: 35, r: 6 },
+                eye2: { cx: 62, cy: 35, r: 6 },
+                mouth: { cx: 50, cy: 55, rx: 12, ry: 8 }
+            },
+            christmas: {
+                shape: 'M50 15 L35 35 L20 35 L30 45 L25 60 L40 50 L50 65 L60 50 L75 60 L70 45 L80 35 L65 35 Z',
+                fill: 'rgba(34, 139, 34, 0.9)',
+                eye1: { cx: 42, cy: 30, r: 3 },
+                eye2: { cx: 58, cy: 30, r: 3 },
+                mouth: { cx: 50, cy: 40, rx: 6, ry: 4 }
+            }
+        };
+
+        // Initialiser le thème
+        document.body.className = 'theme-ghost';
+
+        // Fonction pour créer la neige
+        function createSnowflake() {
+            const snowflake = document.createElement('div');
+            snowflake.className = 'snowflake';
+            snowflake.innerHTML = '❄';
+            snowflake.style.left = Math.random() * 100 + 'vw';
+            snowflake.style.animationDuration = Math.random() * 3 + 2 + 's';
+            snowflake.style.opacity = Math.random();
+            snowflake.style.fontSize = Math.random() * 10 + 10 + 'px';
+            
+            document.body.appendChild(snowflake);
+            snowflakes.push(snowflake);
+            
+            setTimeout(() => {
+                if (snowflake.parentNode) {
+                    snowflake.parentNode.removeChild(snowflake);
+                    const index = snowflakes.indexOf(snowflake);
+                    if (index > -1) snowflakes.splice(index, 1);
+                }
+            }, 5000);
+        }
+
+        // Fonction pour changer de thème
+        function changeTheme(theme) {
+            currentTheme = theme;
+            document.body.className = `theme-${theme}`;
+            
+            // Mettre à jour les boutons
+            document.querySelectorAll('.theme-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-theme="${theme}"]`).classList.add('active');
+            
+            // Mettre à jour la forme principale
+            const themeData = themes[theme];
+            document.getElementById('main-shape').setAttribute('d', themeData.shape);
+            document.getElementById('main-shape').setAttribute('fill', themeData.fill);
+            document.getElementById('eye1').setAttribute('cx', themeData.eye1.cx);
+            document.getElementById('eye1').setAttribute('cy', themeData.eye1.cy);
+            document.getElementById('eye1').setAttribute('r', themeData.eye1.r);
+            document.getElementById('eye2').setAttribute('cx', themeData.eye2.cx);
+            document.getElementById('eye2').setAttribute('cy', themeData.eye2.cy);
+            document.getElementById('eye2').setAttribute('r', themeData.eye2.r);
+            document.getElementById('mouth').setAttribute('cx', themeData.mouth.cx);
+            document.getElementById('mouth').setAttribute('cy', themeData.mouth.cy);
+            document.getElementById('mouth').setAttribute('rx', themeData.mouth.rx);
+            document.getElementById('mouth').setAttribute('ry', themeData.mouth.ry);
+            
+            // Mettre à jour la traînée
+            trailGhosts.forEach(ghost => updateGhostTheme(ghost, theme));
+            
+            // Gérer la neige pour Noël
+            if (theme === 'christmas') {
+                snowInterval = setInterval(createSnowflake, 300);
+            } else {
+                if (snowInterval) clearInterval(snowInterval);
+                // Supprimer les flocons existants
+                snowflakes.forEach(flake => {
+                    if (flake.parentNode) flake.parentNode.removeChild(flake);
+                });
+                snowflakes = [];
+            }
+        }
+
+        // Fonction pour mettre à jour un fantôme de la traînée
+        function updateGhostTheme(ghost, theme) {
+            const themeData = themes[theme];
+            const shape = ghost.querySelector('path');
+            const eye1 = ghost.querySelector('circle:nth-of-type(1)');
+            const eye2 = ghost.querySelector('circle:nth-of-type(2)');
+            const mouth = ghost.querySelector('ellipse');
+            
+            shape.setAttribute('d', themeData.shape);
+            shape.setAttribute('fill', themeData.fill);
+            eye1.setAttribute('cx', themeData.eye1.cx);
+            eye1.setAttribute('cy', themeData.eye1.cy);
+            eye1.setAttribute('r', themeData.eye1.r);
+            eye2.setAttribute('cx', themeData.eye2.cx);
+            eye2.setAttribute('cy', themeData.eye2.cy);
+            eye2.setAttribute('r', themeData.eye2.r);
+            mouth.setAttribute('cx', themeData.mouth.cx);
+            mouth.setAttribute('cy', themeData.mouth.cy);
+            mouth.setAttribute('rx', themeData.mouth.rx);
+            mouth.setAttribute('ry', themeData.mouth.ry);
+        }
+
+        let snowInterval;
+
+        // Événements pour les boutons de thème
+        document.querySelectorAll('.theme-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const theme = button.getAttribute('data-theme');
+                changeTheme(theme);
+            });
+        });
+
+        // Créer les fantômes de la traînée
+        for (let i = 0; i < trailLength; i++) {
+            const trailGhost = ghostMain.cloneNode(true);
+            trailGhost.id = `ghost-trail-${i}`;
+            trailGhost.classList.add('ghost-trail');
+            
+            // Calculer l'opacité décroissante (plus progressive)
+            const opacity = 0.8 - (i * 0.1);
+            trailGhost.style.opacity = opacity;
+            
+            // Rendre légèrement plus petit
+            const scale = 1 - (i * 0.05);
+            trailGhost.style.transform = `scale(${scale})`;
+            
+            // Délai d'animation différent pour chaque fantôme
+            trailGhost.style.animationDelay = `${i * 0.2}s`;
+            
+            document.body.appendChild(trailGhost);
+            trailGhosts.push(trailGhost);
+            trailPositions.push({ x: mouseX, y: mouseY });
+        }
+
+        // Créer des particules flottantes
+        function createParticle(x, y) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            
+            // Position aléatoire autour du fantôme
+            const offsetX = (Math.random() - 0.5) * 80;
+            const offsetY = (Math.random() - 0.5) * 80;
+            
+            particle.style.left = (x + offsetX) + 'px';
+            particle.style.top = (y + offsetY) + 'px';
+            
+            // Délai d'animation aléatoire
+            particle.style.animationDelay = Math.random() * 2 + 's';
+            particle.style.animationDuration = (2 + Math.random() * 2) + 's';
+            
+            document.body.appendChild(particle);
+            particles.push(particle);
+            
+            // Supprimer la particule après l'animation
+            setTimeout(() => {
+                if (particle.parentNode) {
+                    particle.parentNode.removeChild(particle);
+                    const index = particles.indexOf(particle);
+                    if (index > -1) particles.splice(index, 1);
+                }
+            }, 4000);
+        }
+
+        // Suivi de la souris
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        // Créer des particules périodiquement
+        let particleTimer = 0;
+        const particleInterval = 8; // Créer une particule toutes les 8 frames
+
+        // Animation de la traînée
+        function animate() {
+            // Positionner le fantôme principal
+            ghostMain.style.left = (mouseX - 30) + 'px';
+            ghostMain.style.top = (mouseY - 30) + 'px';
+            
+            // Particules
+            particleTimer++;
+            if (particleTimer >= particleInterval) {
+                createParticle(mouseX, mouseY);
+                particleTimer = 0;
+            }
+            
+            for (let i = trailLength - 1; i > 0; i--) {
+                trailPositions[i].x = trailPositions[i - 1].x;
+                trailPositions[i].y = trailPositions[i - 1].y;
+            }
+            trailPositions[0].x = mouseX;
+            trailPositions[0].y = mouseY;
+            
+            trailGhosts.forEach((ghost, index) => {
+                const delay = index + 1;
+                const targetX = trailPositions[Math.min(delay * 2, trailLength - 1)].x;
+                const targetY = trailPositions[Math.min(delay * 2, trailLength - 1)].y;
+                
+                ghost.style.left = (targetX - 30) + 'px';
+                ghost.style.top = (targetY - 30) + 'px';
+            });
+            
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
