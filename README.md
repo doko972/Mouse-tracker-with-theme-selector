@@ -1,16 +1,16 @@
-# 👻 Ghost Mouse Tracker
+# Ghost Mouse Tracker
 
 Un mouse-tracker interactif avec des effets visuels magiques et plusieurs thèmes saisonniers.
 
-## ✨ Fonctionnalités
+## Fonctionnalités
 
-### 🎮 Interaction
+### Interaction
 - **Suivi de souris fluide** : Un personnage suit votre curseur en temps réel
 - **Traînée estompée** : 8 copies du personnage suivent avec opacité décroissante
 - **Animation de flottement** : Mouvement organique et naturel
 - **Particules magiques** : Effets visuels qui tourbillonnent autour du curseur
 
-### 🎨 Thèmes Disponibles
+### Thèmes Disponibles
 1. **👻 Fantôme** (par défaut)
    - Fantôme blanc classique
    - Fond bleu nuit mystérieux
@@ -103,12 +103,15 @@ const snowInterval = 300;
 ## 🎨 Capture d'Écran
 
 ### Thème Fantôme
+![Capture d'écran 2025-06-05 211407](https://github.com/user-attachments/assets/345598af-cabb-499d-b9e6-4630c1db1fc8)
 
 
 ### Thème Halloween
+![Capture d'écran 2025-06-05 212128](https://github.com/user-attachments/assets/9b640307-b374-49c2-ab81-77a4d670401d)
 
 
-### Thème Noël
+### Thème Noël (avec de la neige)
+![Capture d'écran 2025-06-05 212139](https://github.com/user-attachments/assets/050c1b2f-9d9a-4f66-ac0d-99e61eab5d7f)
 
 
 ## 🔍 Détails Techniques
